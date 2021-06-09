@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>R you ready?</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.7/header-attrs.js"></script>
+    <link href="libs/table1-1.0/table1_defaults.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# R you ready?
+## An Introduction to R
+
+---
+
+
+
+
+
+
+
+## Welcome!
+
+This is a short tutorial to introduce you to R and demonstrate a few common and useful tasks including:
+
+* basic data management 
+
+* computing descriptive statistics (in well-formatted tables)
+
+* a couple of graphs
+
+To follow along with the workshop in R, you will need to have **already installed** R and R Studio.
+
+---
+
+## Why R?
+
+* R is open source and free, which is great for students and others in low resource settings
+
+* R can do everything that SPSS and SAS can do 
+
+* R is especially great for data visualization (better than SPSS, SAS)
+
+* The R community is supportive and active 
+
+
+
+---
+
+## How to follow along and participate
+
+* Open R Studio
+
+* Install the `tidyverse`, `table1`, `haven`, and `here` packages (if you haven't already)
+
+    + Use the `Tools` menu and choose the `Install packages...` menu choice 
+
+    + Type the names of the packages, `tidyverse, table1, haven, here`, in the dialog box that opens and click Install
+
+* Open the workshop R Markdown file and click on the **tiny** green triangle on the top right corner of the gray shaded area (this is a code chunk!) that contains this: 
+
+
+```r
+library(package = "tidyverse")
+library(package = "table1")
+library(package = "haven")
+library(package = "here")
+```
+
+* The arrow will run all the code in that "chunk" of code
+
+* Throughout the workshop you will be able to run the code from the demonstration by clicking the arrow on the top right in the corresponding code chunk
+
+* In between code chunks, you can type as you would in a Word document if you'd like to take notes
+
+---
+
+## The data set
+
+* Data from Pew Internet &amp; American Life
+
+* Teens and tech survey from 2018 
+
+* Available for direct download from https://www.pewresearch.org/internet/dataset/teens-and-tech-survey-2018/
+
+* Includes questions about technology availability, use, and experiences for teenagers including negative experiences
+
+* Today we will use these data to examine the experiences of high school students on social media including differences by race and sex
+
+---
+
+## Importing data into R
+
+
+
+```r
+# use here so that R looks in the same folder you are in
+here()
+```
+
+```
+[1] "/Users/harrisj/Box/service/chapinhall-workshops"
+```
+
+```r
+# use read_spss function to read the spss file 
+teensTechData2018 &lt;- read_spss(file = "March 7-April 10, 2018 - Teens and Tech Survey - SPSS.sav")
+```
+
+---
+
+## This is real-life data! 
+
+&lt;img src="data-tutorials-wild.jpg" width="800" style="display: block; margin: auto;" /&gt;
+
+---
+
+count: false
+ 
+## Choosing variables
+.panel1-choose_vars-auto[
+
+```r
+*teensTechData2018Rec &lt;- teensTechData2018
+```
+]
+ 
+.panel2-choose_vars-auto[
+
+]
+
+---
+count: false
+ 
+## Choosing variables
+.panel1-choose_vars-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+* select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER)
+```
+]
+ 
+.panel2-choose_vars-auto[
+
+]
+
+&lt;style&gt;
+.panel1-choose_vars-auto {
+  color: black;
+  width: 98%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-choose_vars-auto {
+  color: black;
+  width: 0%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-choose_vars-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Check your work
+
+
+```r
+summary(object = teensTechData2018Rec)
+```
+
+```
+      SNS2             SOC1            OH3_1            OH3_2       
+ Min.   : 1.000   Min.   : 1.000   Min.   :0.0000   Min.   :0.0000  
+ 1st Qu.: 3.000   1st Qu.: 1.000   1st Qu.:0.0000   1st Qu.:0.0000  
+ Median : 4.000   Median : 2.000   Median :0.0000   Median :0.0000  
+ Mean   : 3.937   Mean   : 2.354   Mean   :0.3957   Mean   :0.1575  
+ 3rd Qu.: 5.000   3rd Qu.: 3.000   3rd Qu.:1.0000   3rd Qu.:0.0000  
+ Max.   :98.000   Max.   :98.000   Max.   :1.0000   Max.   :1.0000  
+ NA's   :109                                                        
+     OH3_7            AGE             RACETHNICITY        GENDER      
+ Min.   :0.0000   Length:743         Min.   : 1.000   Min.   : 1.000  
+ 1st Qu.:0.0000   Class :character   1st Qu.: 1.000   1st Qu.: 1.000  
+ Median :0.0000   Mode  :character   Median : 2.000   Median : 2.000  
+ Mean   :0.4213                      Mean   : 2.782   Mean   : 1.793  
+ 3rd Qu.:1.0000                      3rd Qu.: 4.000   3rd Qu.: 2.000  
+ Max.   :1.0000                      Max.   :98.000   Max.   :99.000  
+                                                                      
+```
+
+---
+
+count: false
+ 
+## Choosing variables &amp; people
+.panel1-choose_vars_obs-auto[
+
+```r
+*teensTechData2018Rec &lt;- teensTechData2018
+```
+]
+ 
+.panel2-choose_vars_obs-auto[
+
+]
+
+---
+count: false
+ 
+## Choosing variables &amp; people
+.panel1-choose_vars_obs-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+* select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER)
+```
+]
+ 
+.panel2-choose_vars_obs-auto[
+
+]
+
+---
+count: false
+ 
+## Choosing variables &amp; people
+.panel1-choose_vars_obs-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+* filter(AGE &gt; 14)
+```
+]
+ 
+.panel2-choose_vars_obs-auto[
+
+]
+
+&lt;style&gt;
+.panel1-choose_vars_obs-auto {
+  color: black;
+  width: 98%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-choose_vars_obs-auto {
+  color: black;
+  width: 0%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-choose_vars_obs-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Check your work
+
+
+```r
+summary(object = teensTechData2018Rec)
+```
+
+```
+      SNS2             SOC1           OH3_1           OH3_2       
+ Min.   : 1.000   Min.   :1.000   Min.   :0.000   Min.   :0.0000  
+ 1st Qu.: 3.000   1st Qu.:1.000   1st Qu.:0.000   1st Qu.:0.0000  
+ Median : 4.000   Median :2.000   Median :0.000   Median :0.0000  
+ Mean   : 3.985   Mean   :2.086   Mean   :0.414   Mean   :0.1765  
+ 3rd Qu.: 5.000   3rd Qu.:3.000   3rd Qu.:1.000   3rd Qu.:0.0000  
+ Max.   :98.000   Max.   :3.000   Max.   :1.000   Max.   :1.0000  
+ NA's   :43                                                       
+     OH3_7            AGE             RACETHNICITY        GENDER      
+ Min.   :0.0000   Length:442         Min.   : 1.000   Min.   : 1.000  
+ 1st Qu.:0.0000   Class :character   1st Qu.: 1.000   1st Qu.: 1.000  
+ Median :0.0000   Mode  :character   Median : 1.000   Median : 2.000  
+ Mean   :0.3982                      Mean   : 2.489   Mean   : 1.735  
+ 3rd Qu.:1.0000                      3rd Qu.: 3.750   3rd Qu.: 2.000  
+ Max.   :1.0000                      Max.   :98.000   Max.   :99.000  
+                                                                      
+```
+
+---
+
+## Does anything seem wrong with the descriptive statistics?
+
+&lt;img src="things-that-make-you-go.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+## What exactly does the mean of RACETHNICITY represent? 
+
+&lt;img src="mean-race-variable.PNG" width="400" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+## Managing data types in R
+
+* Commonly used data types in R:
+
+    + factor: variable with categories (categorical data) 
+    
+    + numeric: variable with values over some continuum (continuous data) 
+    
+    + integer: whole number with values over some continuum 
+    
+    + character: used for words or other verbatim information (e.g., ZIP codes) 
+    
+* Several of the variables are the wrong data type! Which ones?
+    
+* The `mutate()` function is useful for changing variable types or values or really anything 
+
+* We can add this function into our data management chain
+
+---
+
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+*teensTechData2018Rec &lt;- teensTechData2018
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+* select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER)
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+* filter(AGE &gt; 14)
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+* zap_labels()
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+* mutate(AGE = as.numeric(AGE))
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding variables
+.panel1-recode-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+* mutate(GENDER = recode_factor(GENDER,
+*                               '1' = 'Male',
+*                               '2' = 'Female',
+*                               '99' = NA_character_))
+```
+]
+ 
+.panel2-recode-auto[
+
+]
+
+&lt;style&gt;
+.panel1-recode-auto {
+  color: black;
+  width: 98%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-recode-auto {
+  color: black;
+  width: 0%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-recode-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Check your work
+
+
+```r
+summary(object = teensTechData2018Rec)
+```
+
+```
+      SNS2             SOC1           OH3_1           OH3_2       
+ Min.   : 1.000   Min.   :1.000   Min.   :0.000   Min.   :0.0000  
+ 1st Qu.: 3.000   1st Qu.:1.000   1st Qu.:0.000   1st Qu.:0.0000  
+ Median : 4.000   Median :2.000   Median :0.000   Median :0.0000  
+ Mean   : 3.985   Mean   :2.086   Mean   :0.414   Mean   :0.1765  
+ 3rd Qu.: 5.000   3rd Qu.:3.000   3rd Qu.:1.000   3rd Qu.:0.0000  
+ Max.   :98.000   Max.   :3.000   Max.   :1.000   Max.   :1.0000  
+ NA's   :43                                                       
+     OH3_7             AGE         RACETHNICITY       GENDER   
+ Min.   :0.0000   Min.   :15.00   Min.   : 1.000   Male  :214  
+ 1st Qu.:0.0000   1st Qu.:15.00   1st Qu.: 1.000   Female:227  
+ Median :0.0000   Median :16.00   Median : 1.000   NA's  :  1  
+ Mean   :0.3982   Mean   :15.97   Mean   : 2.489               
+ 3rd Qu.:1.0000   3rd Qu.:17.00   3rd Qu.: 3.750               
+ Max.   :1.0000   Max.   :17.00   Max.   :98.000               
+                                                               
+```
+
+---
+
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+*teensTechData2018Rec &lt;- teensTechData2018
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+* select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER)
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+* filter(AGE &gt; 14)
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+* zap_labels()
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+* mutate(AGE = as.numeric(AGE))
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+* mutate(GENDER = recode_factor(GENDER,
+*                               '1' = 'Male',
+*                               '2' = 'Female',
+*                               '99' = NA_character_))
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding more variables
+.panel1-recode_more-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+  mutate(GENDER = recode_factor(GENDER,
+                                '1' = 'Male',
+                                '2' = 'Female',
+                                '99' = NA_character_)) %&gt;%
+* mutate(RACETHNICITY = recode_factor(RACETHNICITY,
+*                                     '1' = 'White, non-Hispanic',
+*                                     '2' = 'Black, non-Hispanic',
+*                                     '3' = 'Other, non-Hispanic',
+*                                     '4' = 'Hispanic',
+*                                     '98' = NA_character_))
+```
+]
+ 
+.panel2-recode_more-auto[
+
+]
+
+&lt;style&gt;
+.panel1-recode_more-auto {
+  color: black;
+  width: 98%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-recode_more-auto {
+  color: black;
+  width: 0%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-recode_more-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Check your work
+
+
+```r
+summary(object = teensTechData2018Rec)
+```
+
+```
+      SNS2             SOC1           OH3_1           OH3_2       
+ Min.   : 1.000   Min.   :1.000   Min.   :0.000   Min.   :0.0000  
+ 1st Qu.: 3.000   1st Qu.:1.000   1st Qu.:0.000   1st Qu.:0.0000  
+ Median : 4.000   Median :2.000   Median :0.000   Median :0.0000  
+ Mean   : 3.985   Mean   :2.086   Mean   :0.414   Mean   :0.1765  
+ 3rd Qu.: 5.000   3rd Qu.:3.000   3rd Qu.:1.000   3rd Qu.:0.0000  
+ Max.   :98.000   Max.   :3.000   Max.   :1.000   Max.   :1.0000  
+ NA's   :43                                                       
+     OH3_7             AGE                     RACETHNICITY    GENDER   
+ Min.   :0.0000   Min.   :15.00   White, non-Hispanic:223   Male  :214  
+ 1st Qu.:0.0000   1st Qu.:15.00   Black, non-Hispanic: 79   Female:227  
+ Median :0.0000   Median :16.00   Other, non-Hispanic: 29   NA's  :  1  
+ Mean   :0.3982   Mean   :15.97   Hispanic           :109               
+ 3rd Qu.:1.0000   3rd Qu.:17.00   NA's               :  2               
+ Max.   :1.0000   Max.   :17.00                                         
+                                                                        
+```
+
+
+---
+
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+*teensTechData2018Rec &lt;- teensTechData2018
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+* select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER)
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+* filter(AGE &gt; 14)
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+* zap_labels()
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+* mutate(AGE = as.numeric(AGE))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+* mutate(GENDER = recode_factor(GENDER,
+*                               '1' = 'Male',
+*                               '2' = 'Female',
+*                               '99' = NA_character_))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+  mutate(GENDER = recode_factor(GENDER,
+                                '1' = 'Male',
+                                '2' = 'Female',
+                                '99' = NA_character_)) %&gt;%
+* mutate(RACETHNICITY = recode_factor(RACETHNICITY,
+*                                     '1' = 'White, non-Hispanic',
+*                                     '2' = 'Black, non-Hispanic',
+*                                     '3' = 'Other, non-Hispanic',
+*                                     '4' = 'Hispanic',
+*                                     '98' = NA_character_))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+  mutate(GENDER = recode_factor(GENDER,
+                                '1' = 'Male',
+                                '2' = 'Female',
+                                '99' = NA_character_)) %&gt;%
+  mutate(RACETHNICITY = recode_factor(RACETHNICITY,
+                                      '1' = 'White, non-Hispanic',
+                                      '2' = 'Black, non-Hispanic',
+                                      '3' = 'Other, non-Hispanic',
+                                      '4' = 'Hispanic',
+                                      '98' = NA_character_)) %&gt;%
+* mutate(SNS2 = recode_factor(SNS2,
+*                             '1' = 'Twitter',
+*                             '2' = 'Instagram',
+*                             '3' = 'Facebook',
+*                             '4' = 'Snapchat',
+*                             '5' = 'YouTube',
+*                             '6' = 'Tumblr',
+*                             '7' = 'Reddit',
+*                             '8' = 'Not a social media user',
+*                             '98' = NA_character_))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+  mutate(GENDER = recode_factor(GENDER,
+                                '1' = 'Male',
+                                '2' = 'Female',
+                                '99' = NA_character_)) %&gt;%
+  mutate(RACETHNICITY = recode_factor(RACETHNICITY,
+                                      '1' = 'White, non-Hispanic',
+                                      '2' = 'Black, non-Hispanic',
+                                      '3' = 'Other, non-Hispanic',
+                                      '4' = 'Hispanic',
+                                      '98' = NA_character_)) %&gt;%
+  mutate(SNS2 = recode_factor(SNS2,
+                              '1' = 'Twitter',
+                              '2' = 'Instagram',
+                              '3' = 'Facebook',
+                              '4' = 'Snapchat',
+                              '5' = 'YouTube',
+                              '6' = 'Tumblr',
+                              '7' = 'Reddit',
+                              '8' = 'Not a social media user',
+                              '98' = NA_character_)) %&gt;%
+* mutate(OH3_1 = recode_factor(OH3_1,
+*                              '0' = 'No',
+*                              '1' = 'Yes'))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+---
+count: false
+ 
+## Recoding tech variables
+.panel1-recode_tech-auto[
+
+```r
+teensTechData2018Rec &lt;- teensTechData2018 %&gt;%
+  select(SNS2, SOC1, OH3_1, OH3_2, OH3_7, AGE, RACETHNICITY, GENDER) %&gt;%
+  filter(AGE &gt; 14) %&gt;%
+  zap_labels() %&gt;%
+  mutate(AGE = as.numeric(AGE)) %&gt;%
+  mutate(GENDER = recode_factor(GENDER,
+                                '1' = 'Male',
+                                '2' = 'Female',
+                                '99' = NA_character_)) %&gt;%
+  mutate(RACETHNICITY = recode_factor(RACETHNICITY,
+                                      '1' = 'White, non-Hispanic',
+                                      '2' = 'Black, non-Hispanic',
+                                      '3' = 'Other, non-Hispanic',
+                                      '4' = 'Hispanic',
+                                      '98' = NA_character_)) %&gt;%
+  mutate(SNS2 = recode_factor(SNS2,
+                              '1' = 'Twitter',
+                              '2' = 'Instagram',
+                              '3' = 'Facebook',
+                              '4' = 'Snapchat',
+                              '5' = 'YouTube',
+                              '6' = 'Tumblr',
+                              '7' = 'Reddit',
+                              '8' = 'Not a social media user',
+                              '98' = NA_character_)) %&gt;%
+  mutate(OH3_1 = recode_factor(OH3_1,
+                               '0' = 'No',
+                               '1' = 'Yes'))
+```
+]
+ 
+.panel2-recode_tech-auto[
+
+]
+
+&lt;style&gt;
+.panel1-recode_tech-auto {
+  color: black;
+  width: 98%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-recode_tech-auto {
+  color: black;
+  width: 0%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-recode_tech-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Check your work
+
+
+```r
+summary(object = teensTechData2018Rec)
+```
+
+```
+        SNS2          SOC1       OH3_1         OH3_2            OH3_7       
+ Twitter  : 13   Min.   :1.000   No :259   Min.   :0.0000   Min.   :0.0000  
+ Instagram: 62   1st Qu.:1.000   Yes:183   1st Qu.:0.0000   1st Qu.:0.0000  
+ Facebook : 58   Median :2.000             Median :0.0000   Median :0.0000  
+ Snapchat :153   Mean   :2.086             Mean   :0.1765   Mean   :0.3982  
+ YouTube  :103   3rd Qu.:3.000             3rd Qu.:0.0000   3rd Qu.:1.0000  
+ Tumblr   :  9   Max.   :3.000             Max.   :1.0000   Max.   :1.0000  
+ NA's     : 44                                                              
+      AGE                     RACETHNICITY    GENDER   
+ Min.   :15.00   White, non-Hispanic:223   Male  :214  
+ 1st Qu.:15.00   Black, non-Hispanic: 79   Female:227  
+ Median :16.00   Other, non-Hispanic: 29   NA's  :  1  
+ Mean   :15.97   Hispanic           :109               
+ 3rd Qu.:17.00   NA's               :  2               
+ Max.   :17.00                                         
+                                                       
+```
+
+---
+
+## You Try It!
+
+* Finish the recoding yourself by cleaning SOC1, OH3_2, OH3_7
+
+* The codebook is unclear, so here are the labels to add:
+
+    + SOC1: 1 = Mostly positive, 2 = Mostly negative, and 3 = Neither positive nor negative 
+    
+    + OH3_2 and OH3_7: 1 = Yes, 0 = No
+    
+* When finished adding this code, run the `summary()` function to see if it works
+
+
+
+
+---
+
+## Final code 
+
+&lt;img src="./this-is-the-way.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Final code
+
+
+```r
+# Add to the prior code starting with a pipe %&gt;% and then...
+
+  mutate(OH3_2 = recode_factor(OH3_2,
+                               '0' = 'No',
+                               '1' = 'Yes')) %&gt;% 
+  mutate(OH3_7 = recode_factor(OH3_7,
+                               '0' = 'No',
+                               '1' = 'Yes')) %&gt;% 
+  mutate(SOC1 = recode_factor(SOC1,
+                              '1' = 'Mostly positive',
+                              '2' = 'Mostly negative',
+                              '3' = 'Neither positive nor negative'))
+```
+
+---
+
+## Descriptive stats &amp; tables 
+
+* There are dozens of ways to get descriptive statistics in R 
+
+* One of the most efficient is to use a table function 
+
+* As long as your data are clean, R does the work of choosing appropriate statistics for you 
+
+* Let's make a table!
+
+---
+
+## Basic table
+
+
+```r
+table1(~ SOC1 + AGE + GENDER + RACETHNICITY, 
+       data = teensTechData2018Rec)
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=442)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>SOC1</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly positive</td>
+<td>138 (31.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly negative</td>
+<td>128 (29.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Neither positive nor negative</td>
+<td class='lastrow'>176 (39.8%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>AGE</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>16.0 (0.823)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>16.0 [15.0, 17.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>GENDER</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Male</td>
+<td>214 (48.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Female</td>
+<td>227 (51.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>RACETHNICITY</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>White, non-Hispanic</td>
+<td>223 (50.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Black, non-Hispanic</td>
+<td>79 (17.9%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Other, non-Hispanic</td>
+<td>29 (6.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Hispanic</td>
+<td>109 (24.7%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>2 (0.5%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## Adding labels &amp; units to the table
+
+
+```r
+label(teensTechData2018Rec$SOC1) &lt;- "What effect would you say social media has had on people your age?"
+label(teensTechData2018Rec$RACETHNICITY) &lt;- "Race &amp; ethnicity"
+label(teensTechData2018Rec$GENDER) &lt;- "Sex"
+label(teensTechData2018Rec$AGE) &lt;- "Age"
+
+units(teensTechData2018Rec$AGE) &lt;- "years"
+```
+
+
+
+---
+
+## Fancier table
+
+
+```r
+table1(~ SOC1 + AGE + GENDER + RACETHNICITY, 
+       data = teensTechData2018Rec,
+       render.missing = NULL,
+       render.continuous = c(. = "Mean (SD)"))
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=442)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>What effect would you say social media has had on people your age?</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly positive</td>
+<td>138 (31.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly negative</td>
+<td>128 (29.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Neither positive nor negative</td>
+<td class='lastrow'>176 (39.8%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Age (years)</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Mean (SD)</td>
+<td class='lastrow'>16.0 (0.823)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Sex</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Male</td>
+<td>214 (48.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Female</td>
+<td class='lastrow'>227 (51.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Race & ethnicity</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>White, non-Hispanic</td>
+<td>223 (50.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Black, non-Hispanic</td>
+<td>79 (17.9%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Other, non-Hispanic</td>
+<td>29 (6.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Hispanic</td>
+<td class='lastrow'>109 (24.7%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## Stratified table
+
+
+```r
+table1(~ SOC1 + AGE + RACETHNICITY | GENDER, 
+       data = teensTechData2018Rec,
+       render.missing = NULL,
+       render.continuous = c(. = "Mean (SD)"))
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=214)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=227)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=442)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>What effect would you say social media has had on people your age?</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly positive</td>
+<td>69 (32.2%)</td>
+<td>69 (30.4%)</td>
+<td>138 (31.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly negative</td>
+<td>56 (26.2%)</td>
+<td>72 (31.7%)</td>
+<td>128 (29.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Neither positive nor negative</td>
+<td class='lastrow'>89 (41.6%)</td>
+<td class='lastrow'>86 (37.9%)</td>
+<td class='lastrow'>176 (39.8%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Age (years)</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Mean (SD)</td>
+<td class='lastrow'>16.0 (0.852)</td>
+<td class='lastrow'>16.0 (0.794)</td>
+<td class='lastrow'>16.0 (0.823)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Race & ethnicity</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>White, non-Hispanic</td>
+<td>107 (50.0%)</td>
+<td>115 (50.7%)</td>
+<td>223 (50.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Black, non-Hispanic</td>
+<td>43 (20.1%)</td>
+<td>36 (15.9%)</td>
+<td>79 (17.9%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Other, non-Hispanic</td>
+<td>14 (6.5%)</td>
+<td>15 (6.6%)</td>
+<td>29 (6.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Hispanic</td>
+<td class='lastrow'>49 (22.9%)</td>
+<td class='lastrow'>60 (26.4%)</td>
+<td class='lastrow'>109 (24.7%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## Stratified table
+
+
+```r
+table1(~ SOC1 + AGE | RACETHNICITY * GENDER, 
+       data = teensTechData2018Rec,
+       overall = NULL,
+       render.missing = NULL,
+       render.continuous = c(. = "Mean (SD)"))
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class="grouplabel"></th>
+<th colspan="2" class="grouplabel"><div>White, non-Hispanic</div></th>
+<th colspan="2" class="grouplabel"><div>Black, non-Hispanic</div></th>
+<th colspan="2" class="grouplabel"><div>Other, non-Hispanic</div></th>
+<th colspan="2" class="grouplabel"><div>Hispanic</div></th>
+</tr>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=107)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=115)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=43)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=36)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=14)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=15)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=49)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=60)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>What effect would you say social media has had on people your age?</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly positive</td>
+<td>37 (34.6%)</td>
+<td>37 (32.2%)</td>
+<td>13 (30.2%)</td>
+<td>12 (33.3%)</td>
+<td>6 (42.9%)</td>
+<td>5 (33.3%)</td>
+<td>13 (26.5%)</td>
+<td>14 (23.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Mostly negative</td>
+<td>29 (27.1%)</td>
+<td>34 (29.6%)</td>
+<td>13 (30.2%)</td>
+<td>11 (30.6%)</td>
+<td>2 (14.3%)</td>
+<td>5 (33.3%)</td>
+<td>11 (22.4%)</td>
+<td>22 (36.7%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Neither positive nor negative</td>
+<td class='lastrow'>41 (38.3%)</td>
+<td class='lastrow'>44 (38.3%)</td>
+<td class='lastrow'>17 (39.5%)</td>
+<td class='lastrow'>13 (36.1%)</td>
+<td class='lastrow'>6 (42.9%)</td>
+<td class='lastrow'>5 (33.3%)</td>
+<td class='lastrow'>25 (51.0%)</td>
+<td class='lastrow'>24 (40.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>Age (years)</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Mean (SD)</td>
+<td class='lastrow'>16.0 (0.857)</td>
+<td class='lastrow'>16.0 (0.784)</td>
+<td class='lastrow'>16.0 (0.899)</td>
+<td class='lastrow'>16.0 (0.793)</td>
+<td class='lastrow'>15.9 (0.829)</td>
+<td class='lastrow'>15.9 (0.704)</td>
+<td class='lastrow'>15.9 (0.838)</td>
+<td class='lastrow'>15.9 (0.840)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## Making graphs with ggplot
+
+* Part of the `tidyverse` set of packages in R
+
+* `gg` stands for **grammar** of **graphics**
+
+* Plots created in `ggplot2` are built in layers 
+
+* First, a bar chart...
+
+---
+
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+*teensTechData2018Rec
+```
+]
+ 
+.panel2-my_bar-auto[
+
+```
+# A tibble: 442 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 432 more rows
+```
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+* ggplot(aes(x = SNS2))
+```
+]
+ 
+.panel2-my_bar-auto[
+![](index_files/figure-html/my_bar_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  ggplot(aes(x = SNS2)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar-auto[
+![](index_files/figure-html/my_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+*teensTechData2018Rec
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+
+```
+# A tibble: 442 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 432 more rows
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+* drop_na(SNS2)
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+
+```
+# A tibble: 398 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 Snapchat Neither positive no… No    Yes   No       15 White, non-Hisp… Male  
+# … with 388 more rows
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(SNS2) %&gt;%
+* ggplot(aes(x = SNS2))
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](index_files/figure-html/my_bar_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(SNS2) %&gt;%
+  ggplot(aes(x = SNS2)) +
+* geom_bar(fill = "#7463AC")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](index_files/figure-html/my_bar_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(SNS2) %&gt;%
+  ggplot(aes(x = SNS2)) +
+  geom_bar(fill = "#7463AC") +
+* labs(x = "Social media platform",
+*      y = "Number who use this platform most",
+*      title = "Most used social media platforms")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](index_files/figure-html/my_bar_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(SNS2) %&gt;%
+  ggplot(aes(x = SNS2)) +
+  geom_bar(fill = "#7463AC") +
+  labs(x = "Social media platform",
+       y = "Number who use this platform most",
+       title = "Most used social media platforms") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](index_files/figure-html/my_bar_fancy_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You try it!
+
+Make a bar chart of one of the other variables in your data set with the Figure 1 code in your R Markdown file.
+
+Edit the code to: 
+
+* Change the name of the variable you are plotting 
+
+* Change the color of the bars by replacing #7463AC the name of your favorite color (e.g., orange) or using a color found on the https://colorbrewer2.org/ website
+
+* Edit the labels for the axes and title inside the quote marks
+
+* Try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+---
+
+## Figure 1 code 
+
+&lt;img src="./this-is-the-way.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+*teensTechData2018Rec
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+
+```
+# A tibble: 442 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 432 more rows
+```
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+* drop_na(OH3_2)
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+
+```
+# A tibble: 442 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 432 more rows
+```
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2) %&gt;%
+* ggplot(aes(x = OH3_2))
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+![](index_files/figure-html/my_bar_fancy_fig1_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+* geom_bar(fill = "dodgerblue")
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+![](index_files/figure-html/my_bar_fancy_fig1_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+  geom_bar(fill = "dodgerblue") +
+* labs(x = "Been physically threatened online or on cell phone",
+*      y = "Frequency",
+*      title = "Number of participants who have been physically threatened online\nor on cell phone")
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+![](index_files/figure-html/my_bar_fancy_fig1_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+  geom_bar(fill = "dodgerblue") +
+  labs(x = "Been physically threatened online or on cell phone",
+       y = "Frequency",
+       title = "Number of participants who have been physically threatened online\nor on cell phone") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy_fig1-auto[
+![](index_files/figure-html/my_bar_fancy_fig1_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy_fig1-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy_fig1-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy_fig1-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+*teensTechData2018Rec
+```
+]
+ 
+.panel2-facet_graph-auto[
+
+```
+# A tibble: 442 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 432 more rows
+```
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+* drop_na(OH3_2, GENDER)
+```
+]
+ 
+.panel2-facet_graph-auto[
+
+```
+# A tibble: 441 x 8
+   SNS2     SOC1                 OH3_1 OH3_2 OH3_7   AGE RACETHNICITY     GENDER
+   &lt;fct&gt;    &lt;fct&gt;                &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt; 
+ 1 Instagr… Mostly negative      Yes   Yes   No       15 Black, non-Hisp… Male  
+ 2 Tumblr   Mostly negative      Yes   No    No       17 White, non-Hisp… Male  
+ 3 YouTube  Mostly negative      No    No    Yes      15 Other, non-Hisp… Female
+ 4 Twitter  Mostly negative      Yes   No    No       17 Black, non-Hisp… Female
+ 5 Facebook Mostly negative      Yes   Yes   No       17 Hispanic         Female
+ 6 Snapchat Mostly negative      No    No    Yes      15 White, non-Hisp… Male  
+ 7 Snapchat Mostly negative      Yes   No    No       15 Hispanic         Female
+ 8 Facebook Neither positive no… No    No    Yes      17 White, non-Hisp… Female
+ 9 Facebook Neither positive no… No    No    Yes      16 White, non-Hisp… Male  
+10 &lt;NA&gt;     Mostly negative      No    No    Yes      16 Black, non-Hisp… Male  
+# … with 431 more rows
+```
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2, GENDER) %&gt;%
+* ggplot(aes(x = OH3_2))
+```
+]
+ 
+.panel2-facet_graph-auto[
+![](index_files/figure-html/facet_graph_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2, GENDER) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+* geom_bar(fill = "dodgerblue")
+```
+]
+ 
+.panel2-facet_graph-auto[
+![](index_files/figure-html/facet_graph_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2, GENDER) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+  geom_bar(fill = "dodgerblue") +
+* labs(x = "Been physically threatened online or on cell phone",
+*      y = "Frequency",
+*      title = "Number of participants who have been physically threatened online\nor on cell phone")
+```
+]
+ 
+.panel2-facet_graph-auto[
+![](index_files/figure-html/facet_graph_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2, GENDER) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+  geom_bar(fill = "dodgerblue") +
+  labs(x = "Been physically threatened online or on cell phone",
+       y = "Frequency",
+       title = "Number of participants who have been physically threatened online\nor on cell phone") +
+* theme_minimal()
+```
+]
+ 
+.panel2-facet_graph-auto[
+![](index_files/figure-html/facet_graph_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Graph with facets
+.panel1-facet_graph-auto[
+
+```r
+teensTechData2018Rec %&gt;%
+  drop_na(OH3_2, GENDER) %&gt;%
+  ggplot(aes(x = OH3_2)) +
+  geom_bar(fill = "dodgerblue") +
+  labs(x = "Been physically threatened online or on cell phone",
+       y = "Frequency",
+       title = "Number of participants who have been physically threatened online\nor on cell phone") +
+  theme_minimal() +
+* facet_wrap(facets = vars(GENDER))
+```
+]
+ 
+.panel2-facet_graph-auto[
+![](index_files/figure-html/facet_graph_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-facet_graph-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-facet_graph-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-facet_graph-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## The end
+
+* Email me at [harrisj@wustl.edu](mailto:harrisj@wustl.edu)
+
+* Connect with me on Twitter [@jenineharris](https://twitter.com/jenineharris)
+
+&lt;br&gt;&lt;br&gt;
+&lt;img src="ChapinHall_Logo_UChicago_RGB.png" width="800" style="display: block; margin: auto;" /&gt;
+
+
+&lt;!-- adjust font size in this css code chunk, currently 80 --&gt;
+
+&lt;style type="text/css"&gt;
+.remark-code{line-height: 1.5; font-size: 80%}
+
+@media print {
+  .has-continuation {
+    display: block;
+  }
+}
+
+code.r.hljs.remark-code{
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+code.r.hljs.remark-code:hover{
+  overflow-x:visible;
+  width: 500px;
+  border-style: solid;
+}
+&lt;/style&gt;
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
