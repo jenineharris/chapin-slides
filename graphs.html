@@ -3205,7 +3205,7 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
 * geom_boxplot(aes(color = species, fill = species),
-*              alpha = .3)
+*              alpha = .4)
 ```
 ]
  
@@ -3226,8 +3226,8 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
-               alpha = .3) +
-* geom_jitter(aes(color = species), alpha = .4)
+               alpha = .4) +
+* geom_jitter(aes(color = species), alpha = .6)
 ```
 ]
  
@@ -3248,8 +3248,8 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
-               alpha = .3) +
-  geom_jitter(aes(color = species), alpha = .4) +
+               alpha = .4) +
+  geom_jitter(aes(color = species), alpha = .6) +
 * labs(x = "Character Species",
 *      y = "Height (cm)",
 *      title = "Height (cm) of Star Wars Characters by Species")
@@ -3273,8 +3273,8 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
-               alpha = .3) +
-  geom_jitter(aes(color = species), alpha = .4) +
+               alpha = .4) +
+  geom_jitter(aes(color = species), alpha = .6) +
   labs(x = "Character Species",
        y = "Height (cm)",
        title = "Height (cm) of Star Wars Characters by Species") +
@@ -3299,8 +3299,8 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
-               alpha = .3) +
-  geom_jitter(aes(color = species), alpha = .4) +
+               alpha = .4) +
+  geom_jitter(aes(color = species), alpha = .6) +
   labs(x = "Character Species",
        y = "Height (cm)",
        title = "Height (cm) of Star Wars Characters by Species") +
@@ -3326,8 +3326,8 @@ starwarsRec %&gt;%
   geom_violin(aes(color = species), fill = "white",
               alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
-               alpha = .3) +
-  geom_jitter(aes(color = species), alpha = .4) +
+               alpha = .4) +
+  geom_jitter(aes(color = species), alpha = .6) +
   labs(x = "Character Species",
        y = "Height (cm)",
        title = "Height (cm) of Star Wars Characters by Species") +
@@ -4417,7 +4417,7 @@ starwarsRec %&gt;%
   labs(x = "Gender",
        y = "Mass (kg)",
        title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
-* theme_minimal(base_size = 14)
+* theme_minimal(base_size = 16)
 ```
 ]
  
@@ -4441,7 +4441,7 @@ starwarsRec %&gt;%
   labs(x = "Gender",
        y = "Mass (kg)",
        title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 16) +
 * coord_flip()
 ```
 ]
@@ -4466,7 +4466,7 @@ starwarsRec %&gt;%
   labs(x = "Gender",
        y = "Mass (kg)",
        title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 16) +
   coord_flip() +
 * scale_color_brewer(palette = "Set1")
 ```
@@ -4492,7 +4492,7 @@ starwarsRec %&gt;%
   labs(x = "Gender",
        y = "Mass (kg)",
        title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 16) +
   coord_flip() +
   scale_color_brewer(palette = "Set1") +
 * scale_fill_brewer(palette = "Set1")
@@ -4519,7 +4519,7 @@ starwarsRec %&gt;%
   labs(x = "Gender",
        y = "Mass (kg)",
        title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 16) +
   coord_flip() +
   scale_color_brewer(palette = "Set1") +
   scale_fill_brewer(palette = "Set1") +
