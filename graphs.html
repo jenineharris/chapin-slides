@@ -1,0 +1,5333 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>You must be plotting something</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.7/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# You must be plotting something
+## An intro to R data viz in ggplot2
+
+---
+
+
+
+
+
+
+
+## Welcome!
+
+This is a short tutorial that will demonstrate plotting several common types of graphs in R using the `ggplot2` package.
+
+To follow along with the workshop in R, you will need to have **already installed** R and R Studio.
+
+---
+
+## How to follow along and participate
+
+* Open R Studio
+
+* Install the `tidyverse` and `rmarkdown` packages (if you haven't already)
+
+    + Use the `Tools` menu and choose the `Install packages...` menu choice 
+
+    + Type the names of the packages, `tidyverse, rmarkdown`, in the dialog box that opens and click Install
+
+* Open the workshop R Markdown file and click on the **tiny** green arrow on the top right corner of the gray shaded area (this is a code chunk!) that contains this: 
+
+
+```r
+library(package = "tidyverse")
+library(package = "gghalves")
+```
+
+* The arrow will run all the code in that "chunk" of code
+
+* Throughout the workshop you will be able to run the code from the demonstration by clicking the arrow on the top right in the corresponding code chunk
+
+* In between code chunks, you can type as you would in a Word document if you'd like to take notes
+
+* For the exercises you may have to finish the code yourself and then click the arrow to get the anticipated result
+
+---
+
+## Why are we doing this?
+
+&lt;img src="./eda-party.png" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+## The data set
+
+* We will be using a built-in R data set containing data from Star Wars characters
+
+&lt;img src="./yoda-mouth-open.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Examine the full data set
+
+* Get to know the data by running the code chunk (chunk2) that contains the name of the data:
+
+
+```r
+starwars
+```
+
+```
+# A tibble: 87 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+
+---
+
+## Recode a few variables in the data set
+
+
+```r
+# change data types &amp; subset data set to remove lists
+# recode hermaphroditic to intersex modern terminology
+# recode species to fewer categories
+starwarsRec &lt;- starwars %&gt;% 
+  select(-films, -vehicles, -starships) %&gt;% 
+  mutate(sex = recode_factor(sex,
+                             'hermaphroditic' = 'intersex')) %&gt;% 
+  mutate(species = if_else(species %in% c('Human', 'Droid'), species, 'Other')) %&gt;% 
+  mutate(eye_color = if_else(eye_color %in% c('brown', 'black', 'dark'), 'dark', 
+                             if_else(eye_color %in% c('blue', 'hazel', 'blue-gray', 'red,blue'), 'light',
+                                                      if_else(eye_color == 'unknown', NA_character_,
+                                                              'bright')))) %&gt;% 
+  mutate_if(is.character, as.factor)
+```
+
+---
+
+## Check the recoding
+
+
+```r
+# summarize updated data set
+summary(object = starwarsRec)
+```
+
+```
+                  name        height           mass           hair_color
+ Ackbar             : 1   Min.   : 66.0   Min.   :  15.00   none   :37  
+ Adi Gallia         : 1   1st Qu.:167.0   1st Qu.:  55.60   brown  :18  
+ Anakin Skywalker   : 1   Median :180.0   Median :  79.00   black  :13  
+ Arvel Crynyd       : 1   Mean   :174.4   Mean   :  97.31   white  : 4  
+ Ayla Secura        : 1   3rd Qu.:191.0   3rd Qu.:  84.50   blond  : 3  
+ Bail Prestor Organa: 1   Max.   :264.0   Max.   :1358.00   (Other): 7  
+ (Other)            :81   NA's   :6       NA's   :28        NA's   : 5  
+   skin_color  eye_color    birth_year           sex           gender  
+ fair   :17   bright:29   Min.   :  8.00   intersex: 1   feminine :17  
+ light  :11   dark  :32   1st Qu.: 35.00   male    :60   masculine:66  
+ dark   : 6   light :23   Median : 52.00   none    : 6   NA's     : 4  
+ green  : 6   NA's  : 3   Mean   : 87.57   female  :16                 
+ grey   : 6               3rd Qu.: 72.00   NA's    : 4                 
+ pale   : 5               Max.   :896.00                               
+ (Other):36               NA's   :44                                   
+     homeworld   species  
+ Naboo    :11   Droid: 6  
+ Tatooine :10   Human:35  
+ Alderaan : 3   Other:46  
+ Coruscant: 3             
+ Kamino   : 3             
+ (Other)  :47             
+ NA's     :10             
+```
+
+
+---
+
+## Using the ggplot2 package for plotting
+
+* Part of the `tidyverse` set of packages in R
+
+* `gg` stands for **grammar** of **graphics**
+
+* Plots created in `ggplot2` are built in layers 
+
+* Let's look at some examples
+
+* First, a bar chart...
+
+---
+
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_bar-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+starwarsRec %&gt;%
+* ggplot(aes(x = gender))
+```
+]
+ 
+.panel2-my_bar-auto[
+![](graphs_files/figure-html/my_bar_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(x = gender)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar-auto[
+![](graphs_files/figure-html/my_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(gender)
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(gender) %&gt;%
+* ggplot(aes(x = gender))
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](graphs_files/figure-html/my_bar_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(x = gender)) +
+* geom_bar(fill = "#7463AC")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](graphs_files/figure-html/my_bar_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(x = gender)) +
+  geom_bar(fill = "#7463AC") +
+* labs(x = "Character Gender",
+*      y = "Frequency",
+*      title = "Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](graphs_files/figure-html/my_bar_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(x = gender)) +
+  geom_bar(fill = "#7463AC") +
+  labs(x = "Character Gender",
+       y = "Frequency",
+       title = "Gender of Star Wars Characters") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](graphs_files/figure-html/my_bar_fancy_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You try it!
+
+Make a bar chart of the Species of Star Wars Characters with the Figure 1 code in your R Markdown file (chunk6).
+
+Note that there is a line of recoding to update some out-of-date terminology.
+
+Edit the code to: 
+
+* Change the color of the bars by replacing #7463AC the name of your favorite color (e.g., orange) or using a color found on the &lt;a href = "https://colorbrewer2.org/"&gt;https://colorbrewer2.org/&lt;/a&gt; website
+
+* Add labels for the axes and a title inside the quote marks
+
+* try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+---
+
+## Figure 1 code 
+
+&lt;img src="./this-is-the-way.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species)
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+* ggplot(aes(x = species))
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+![](graphs_files/figure-html/my_bar_fancy_fig1a_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+* geom_bar(fill = "deeppink")
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+![](graphs_files/figure-html/my_bar_fancy_fig1a_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "deeppink") +
+* labs(x = "Character Species",
+*      y = "Frequency",
+*      title = "Species of Star Wars Characters")
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+![](graphs_files/figure-html/my_bar_fancy_fig1a_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1a-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "deeppink") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species of Star Wars Characters") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy_fig1a-auto[
+![](graphs_files/figure-html/my_bar_fancy_fig1a_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy_fig1a-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy_fig1a-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy_fig1a-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1b-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "deeppink") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species of Star Wars Characters") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy_fig1b-rotate[
+![](graphs_files/figure-html/my_bar_fancy_fig1b_rotate_01_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1b-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "deeppink") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species of Star Wars Characters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_bar_fancy_fig1b-rotate[
+![](graphs_files/figure-html/my_bar_fancy_fig1b_rotate_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 1 code
+.panel1-my_bar_fancy_fig1b-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species) %&gt;%
+  ggplot(aes(x = species)) +
+  geom_bar(fill = "deeppink") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species of Star Wars Characters") +
+* theme_minimal(base_size = 14, base_family = "mono")
+```
+]
+ 
+.panel2-my_bar_fancy_fig1b-rotate[
+![](graphs_files/figure-html/my_bar_fancy_fig1b_rotate_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy_fig1b-rotate {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy_fig1b-rotate {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy_fig1b-rotate {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Basic stacked bar chart for 2 variables
+.panel1-my_2var_bar-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic stacked bar chart for 2 variables
+.panel1-my_2var_bar-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic stacked bar chart for 2 variables
+.panel1-my_2var_bar-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+* ggplot(aes(x = species, fill = gender))
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](graphs_files/figure-html/my_2var_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic stacked bar chart for 2 variables
+.panel1-my_2var_bar-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_2var_bar-auto[
+![](graphs_files/figure-html/my_2var_bar_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+* ggplot(aes(x = species, fill = gender))
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+![](graphs_files/figure-html/my_2var_bar_col_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+![](graphs_files/figure-html/my_2var_bar_col_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar() +
+* scale_fill_brewer(palette = 'Set1', name = "Character Gender")
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+![](graphs_files/figure-html/my_2var_bar_col_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar() +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+* labs(x = "Character Species",
+*      y = "Frequency",
+*      title = "Species and Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+![](graphs_files/figure-html/my_2var_bar_col_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy stacked bar chart for 2 variables
+.panel1-my_2var_bar_col-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar() +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species and Gender of Star Wars Characters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_col-auto[
+![](graphs_files/figure-html/my_2var_bar_col_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_col-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_col-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_col-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+* ggplot(aes(x = species, fill = gender))
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+![](graphs_files/figure-html/my_2var_bar_group1_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+* geom_bar(position = 'dodge')
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+![](graphs_files/figure-html/my_2var_bar_group1_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+* scale_fill_brewer(palette = 'Set1', name = "Character Gender")
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+![](graphs_files/figure-html/my_2var_bar_group1_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+* labs(x = "Character Species",
+*      y = "Frequency",
+*      title = "Species and Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+![](graphs_files/figure-html/my_2var_bar_group1_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group1-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species and Gender of Star Wars Characters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_group1-auto[
+![](graphs_files/figure-html/my_2var_bar_group1_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_group1-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_group1-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_group1-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+* scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species and Gender of Star Wars Characters") +
+  theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_group-rotate[
+![](graphs_files/figure-html/my_2var_bar_group_rotate_01_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+* scale_fill_brewer(palette = 'Dark2', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species and Gender of Star Wars Characters") +
+  theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_group-rotate[
+![](graphs_files/figure-html/my_2var_bar_group_rotate_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with color palettes
+.panel1-my_2var_bar_group-rotate[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  ggplot(aes(x = species, fill = gender)) +
+  geom_bar(position = 'dodge') +
+* scale_fill_brewer(palette = 'Paired', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Frequency",
+       title = "Species and Gender of Star Wars Characters") +
+  theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_group-rotate[
+![](graphs_files/figure-html/my_2var_bar_group_rotate_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_group-rotate {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_group-rotate {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_group-rotate {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+* group_by(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 83 x 11
+# Groups:   species, gender [6]
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+* count()
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   species, gender [6]
+  species gender        n
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt;
+1 Droid   feminine      1
+2 Droid   masculine     5
+3 Human   feminine      9
+4 Human   masculine    26
+5 Other   feminine      7
+6 Other   masculine    35
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+* group_by(species)
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   species [3]
+  species gender        n
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt;
+1 Droid   feminine      1
+2 Droid   masculine     5
+3 Human   feminine      9
+4 Human   masculine    26
+5 Other   feminine      7
+6 Other   masculine    35
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+* mutate(perc = 100 * (n / sum(n)))
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+
+```
+# A tibble: 6 x 4
+# Groups:   species [3]
+  species gender        n  perc
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt; &lt;dbl&gt;
+1 Droid   feminine      1  16.7
+2 Droid   masculine     5  83.3
+3 Human   feminine      9  25.7
+4 Human   masculine    26  74.3
+5 Other   feminine      7  16.7
+6 Other   masculine    35  83.3
+```
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+* ggplot(aes(x = species, y = perc, fill = gender))
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = species, y = perc, fill = gender)) +
+* geom_col(position = 'dodge')
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = species, y = perc, fill = gender)) +
+  geom_col(position = 'dodge') +
+* scale_fill_brewer(palette = 'Set1', name = "Character Gender")
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = species, y = perc, fill = gender)) +
+  geom_col(position = 'dodge') +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+* labs(x = "Character Species",
+*      y = "Percentage in Species Group",
+*      title = "Species and Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = species, y = perc, fill = gender)) +
+  geom_col(position = 'dodge') +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Percentage in Species Group",
+       title = "Species and Gender of Star Wars Characters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy grouped bar chart with percentages
+.panel1-my_2var_bar_perc-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = species, y = perc, fill = gender)) +
+  geom_col(position = 'dodge') +
+  scale_fill_brewer(palette = 'Set1', name = "Character Gender") +
+  labs(x = "Character Species",
+       y = "Percentage in Species Group",
+       title = "Species and Gender of Star Wars Characters") +
+  theme_minimal(base_size = 14) +
+* theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_2var_bar_perc-auto[
+![](graphs_files/figure-html/my_2var_bar_perc_auto_12_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_perc-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_perc-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_perc-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+---
+
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 83 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+* group_by(species, gender)
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 83 x 11
+# Groups:   species, gender [6]
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 73 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+* count()
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   species, gender [6]
+  species gender        n
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt;
+1 Droid   feminine      1
+2 Droid   masculine     5
+3 Human   feminine      9
+4 Human   masculine    26
+5 Other   feminine      7
+6 Other   masculine    35
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+* group_by(species)
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   species [3]
+  species gender        n
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt;
+1 Droid   feminine      1
+2 Droid   masculine     5
+3 Human   feminine      9
+4 Human   masculine    26
+5 Other   feminine      7
+6 Other   masculine    35
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+* mutate(perc = 100 * (n / sum(n)))
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+
+```
+# A tibble: 6 x 4
+# Groups:   species [3]
+  species gender        n  perc
+  &lt;fct&gt;   &lt;fct&gt;     &lt;int&gt; &lt;dbl&gt;
+1 Droid   feminine      1  16.7
+2 Droid   masculine     5  83.3
+3 Human   feminine      9  25.7
+4 Human   masculine    26  74.3
+5 Other   feminine      7  16.7
+6 Other   masculine    35  83.3
+```
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+* ggplot(aes(x = gender, y = perc))
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+![](graphs_files/figure-html/my_2var_bar_facets_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = gender, y = perc)) +
+* geom_col(position = 'dodge')
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+![](graphs_files/figure-html/my_2var_bar_facets_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = gender, y = perc)) +
+  geom_col(position = 'dodge') +
+* labs(x = "Character Gender",
+*      y = "Percentage in Species Group",
+*      title = "Species and Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+![](graphs_files/figure-html/my_2var_bar_facets_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = gender, y = perc)) +
+  geom_col(position = 'dodge') +
+  labs(x = "Character Gender",
+       y = "Percentage in Species Group",
+       title = "Species and Gender of Star Wars Characters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+![](graphs_files/figure-html/my_2var_bar_facets_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Using facets instead of groups
+.panel1-my_2var_bar_facets-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(species, gender) %&gt;%
+  group_by(species, gender) %&gt;%
+  count() %&gt;%
+  group_by(species) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  ggplot(aes(x = gender, y = perc)) +
+  geom_col(position = 'dodge') +
+  labs(x = "Character Gender",
+       y = "Percentage in Species Group",
+       title = "Species and Gender of Star Wars Characters") +
+  theme_minimal(base_size = 14) +
+* facet_wrap(facets = vars(species))
+```
+]
+ 
+.panel2-my_2var_bar_facets-auto[
+![](graphs_files/figure-html/my_2var_bar_facets_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_facets-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_facets-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_facets-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You try it!
+
+Create a bar chart of the Gender and Eye Color of Star Wars Characters in your R Markdown file.
+
+Copy and paste code from the version you like best and edit the code to: 
+
+* Add the eye color variable in the appropriate places
+
+* If the graph uses color, change the color of the bars by replacing the palette with a different palette found on the http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ website (bottom of page)
+
+* Add labels for the axes and a title inside the quote marks
+
+* try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+---
+
+## Figure 2 code 
+
+&lt;img src="./this-is-the-way.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(eye_color, gender)
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(eye_color, gender) %&gt;%
+* ggplot(aes(x = eye_color, fill = gender))
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+![](graphs_files/figure-html/my_2var_bar_cont_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(eye_color, gender) %&gt;%
+  ggplot(aes(x = eye_color, fill = gender)) +
+* geom_bar(position = "dodge")
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+![](graphs_files/figure-html/my_2var_bar_cont_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(eye_color, gender) %&gt;%
+  ggplot(aes(x = eye_color, fill = gender)) +
+  geom_bar(position = "dodge") +
+* scale_fill_brewer(palette = 'Dark2', name = "Gender")
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+![](graphs_files/figure-html/my_2var_bar_cont_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(eye_color, gender) %&gt;%
+  ggplot(aes(x = eye_color, fill = gender)) +
+  geom_bar(position = "dodge") +
+  scale_fill_brewer(palette = 'Dark2', name = "Gender") +
+* labs(x = "Character Eye Color",
+*      y = "Frequency",
+*      title = "Eye Color and Gender of Star Wars Characters")
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+![](graphs_files/figure-html/my_2var_bar_cont_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 2 code
+.panel1-my_2var_bar_cont-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(eye_color, gender) %&gt;%
+  ggplot(aes(x = eye_color, fill = gender)) +
+  geom_bar(position = "dodge") +
+  scale_fill_brewer(palette = 'Dark2', name = "Gender") +
+  labs(x = "Character Eye Color",
+       y = "Frequency",
+       title = "Eye Color and Gender of Star Wars Characters") +
+* theme_bw(base_size = 14)
+```
+]
+ 
+.panel2-my_2var_bar_cont-auto[
+![](graphs_files/figure-html/my_2var_bar_cont_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_2var_bar_cont-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_2var_bar_cont-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_2var_bar_cont-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Basic histogram
+.panel1-my_histo-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_histo-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic histogram
+.panel1-my_histo-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height)
+```
+]
+ 
+.panel2-my_histo-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic histogram
+.panel1-my_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+* ggplot(aes(x = height))
+```
+]
+ 
+.panel2-my_histo-auto[
+![](graphs_files/figure-html/my_histo_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic histogram
+.panel1-my_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+* geom_histogram()
+```
+]
+ 
+.panel2-my_histo-auto[
+![](graphs_files/figure-html/my_histo_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_histo-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-fancier_histo-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height)
+```
+]
+ 
+.panel2-fancier_histo-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+* ggplot(aes(x = height))
+```
+]
+ 
+.panel2-fancier_histo-auto[
+![](graphs_files/figure-html/fancier_histo_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+* geom_histogram(fill = '#756bb1', color = 'white')
+```
+]
+ 
+.panel2-fancier_histo-auto[
+![](graphs_files/figure-html/fancier_histo_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+  geom_histogram(fill = '#756bb1', color = 'white') +
+* labs(x = 'Character height (cm)',
+*      y = 'Frequency',
+*      title = 'Distribution of Star Wars Character Height')
+```
+]
+ 
+.panel2-fancier_histo-auto[
+![](graphs_files/figure-html/fancier_histo_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier histogram
+.panel1-fancier_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+  geom_histogram(fill = '#756bb1', color = 'white') +
+  labs(x = 'Character height (cm)',
+       y = 'Frequency',
+       title = 'Distribution of Star Wars Character Height') +
+* theme_light(base_size = 14)
+```
+]
+ 
+.panel2-fancier_histo-auto[
+![](graphs_files/figure-html/fancier_histo_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-fancier_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-fancier_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-fancier_histo-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-group_histo-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height)
+```
+]
+ 
+.panel2-group_histo-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+* ggplot(aes(x = height, fill = species))
+```
+]
+ 
+.panel2-group_histo-auto[
+![](graphs_files/figure-html/group_histo_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height, fill = species)) +
+* geom_histogram(color = 'white')
+```
+]
+ 
+.panel2-group_histo-auto[
+![](graphs_files/figure-html/group_histo_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height, fill = species)) +
+  geom_histogram(color = 'white') +
+* labs(x = 'Character height (cm)',
+*      y = 'Frequency',
+*      title = 'Distribution of Star Wars Character Height')
+```
+]
+ 
+.panel2-group_histo-auto[
+![](graphs_files/figure-html/group_histo_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped histogram
+.panel1-group_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height, fill = species)) +
+  geom_histogram(color = 'white') +
+  labs(x = 'Character height (cm)',
+       y = 'Frequency',
+       title = 'Distribution of Star Wars Character Height') +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-group_histo-auto[
+![](graphs_files/figure-html/group_histo_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-group_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-group_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-group_histo-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+---
+
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-facet_histo-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height)
+```
+]
+ 
+.panel2-facet_histo-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+* ggplot(aes(x = height))
+```
+]
+ 
+.panel2-facet_histo-auto[
+![](graphs_files/figure-html/facet_histo_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+* geom_histogram(color = 'white', fill = '#c994c7')
+```
+]
+ 
+.panel2-facet_histo-auto[
+![](graphs_files/figure-html/facet_histo_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+  geom_histogram(color = 'white', fill = '#c994c7') +
+* labs(x = 'Character height (cm)',
+*      y = 'Frequency',
+*      title = 'Distribution of Star Wars Character Height by Species')
+```
+]
+ 
+.panel2-facet_histo-auto[
+![](graphs_files/figure-html/facet_histo_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+  geom_histogram(color = 'white', fill = '#c994c7') +
+  labs(x = 'Character height (cm)',
+       y = 'Frequency',
+       title = 'Distribution of Star Wars Character Height by Species') +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-facet_histo-auto[
+![](graphs_files/figure-html/facet_histo_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Histogram with facets
+.panel1-facet_histo-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height) %&gt;%
+  ggplot(aes(x = height)) +
+  geom_histogram(color = 'white', fill = '#c994c7') +
+  labs(x = 'Character height (cm)',
+       y = 'Frequency',
+       title = 'Distribution of Star Wars Character Height by Species') +
+  theme_minimal(base_size = 14) +
+* facet_grid(facets = vars(species))
+```
+]
+ 
+.panel2-facet_histo-auto[
+![](graphs_files/figure-html/facet_histo_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-facet_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-facet_histo-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-facet_histo-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Basic box plot
+.panel1-my_box-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_box-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic box plot
+.panel1-my_box-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height, species)
+```
+]
+ 
+.panel2-my_box-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic box plot
+.panel1-my_box-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+* ggplot(aes(x = species, y = height))
+```
+]
+ 
+.panel2-my_box-auto[
+![](graphs_files/figure-html/my_box_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic box plot
+.panel1-my_box-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+* geom_boxplot()
+```
+]
+ 
+.panel2-my_box-auto[
+![](graphs_files/figure-html/my_box_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_box-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_box-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_box-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+
+
+
+---
+
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+* drop_na(height, species)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+
+```
+# A tibble: 81 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 71 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+* ggplot(aes(x = species, y = height))
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+* geom_violin(aes(color = species), fill = "white",
+*             alpha = .8)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+* geom_boxplot(aes(color = species, fill = species),
+*              alpha = .3)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .3) +
+* geom_jitter(aes(color = species), alpha = .4)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .3) +
+  geom_jitter(aes(color = species), alpha = .4) +
+* labs(x = "Character Species",
+*      y = "Height (cm)",
+*      title = "Height (cm) of Star Wars Characters by Species")
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .3) +
+  geom_jitter(aes(color = species), alpha = .4) +
+  labs(x = "Character Species",
+       y = "Height (cm)",
+       title = "Height (cm) of Star Wars Characters by Species") +
+* scale_color_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .3) +
+  geom_jitter(aes(color = species), alpha = .4) +
+  labs(x = "Character Species",
+       y = "Height (cm)",
+       title = "Height (cm) of Star Wars Characters by Species") +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+* scale_fill_brewer(palette = "Set2", guide = FALSE)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Super fancy layered box plot
+.panel1-my_box_fancy-auto[
+
+```r
+starwarsRec %&gt;%
+  drop_na(height, species) %&gt;%
+  ggplot(aes(x = species, y = height)) +
+  geom_violin(aes(color = species), fill = "white",
+              alpha = .8) +
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .3) +
+  geom_jitter(aes(color = species), alpha = .4) +
+  labs(x = "Character Species",
+       y = "Height (cm)",
+       title = "Height (cm) of Star Wars Characters by Species") +
+  scale_color_brewer(palette = "Set2", guide = FALSE) +
+  scale_fill_brewer(palette = "Set2", guide = FALSE) +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_box_fancy-auto[
+![](graphs_files/figure-html/my_box_fancy_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_box_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_box_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_box_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+* ggplot(aes(y = height, x = species, fill = species, color = species))
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+* geom_half_violin(side = "r")
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+* geom_half_point(alpha = .6, side = "l")
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+* labs(x = "Species",
+*      y = "Height (cm)",
+*      title = "Distribution of Species Height for Star Wars\nCharacters")
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+* coord_flip()
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+* scale_color_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+* scale_fill_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+* theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = height, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Height (cm)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_rain_cloud-auto[
+![](graphs_files/figure-html/my_rain_cloud_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_rain_cloud-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_rain_cloud-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_rain_cloud-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+* ggplot(aes(y = mass, x = species, fill = species, color = species))
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+* geom_half_violin(side = "r")
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+* geom_half_point(alpha = .6, side = "l")
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+* labs(x = "Species",
+*      y = "Mass (kg)",
+*      title = "Distribution of Species Height for Star Wars\nCharacters")
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+* coord_flip()
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+* scale_color_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+* scale_fill_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud2-auto[
+
+```r
+starwarsRec %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+* theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_rain_cloud2-auto[
+![](graphs_files/figure-html/my_rain_cloud2_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_rain_cloud2-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_rain_cloud2-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_rain_cloud2-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+* filter(mass &lt; 250)
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+
+```
+# A tibble: 58 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 48 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+* ggplot(aes(y = mass, x = species, fill = species, color = species))
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+* geom_half_violin(side = "r")
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+* geom_half_point(alpha = .6, side = "l")
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+* labs(x = "Species",
+*      y = "Mass (kg)",
+*      title = "Distribution of Species Height for Star Wars\nCharacters")
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+* coord_flip()
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+* scale_color_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+* scale_fill_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Rain cloud plot
+.panel1-my_rain_cloud3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(y = mass, x = species, fill = species, color = species)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Species",
+       y = "Mass (kg)",
+       title = "Distribution of Species Height for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+* theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_rain_cloud3-auto[
+![](graphs_files/figure-html/my_rain_cloud3_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_rain_cloud3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_rain_cloud3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_rain_cloud3-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You Try It!
+
+* Copy the rain cloud plot code for height or mass and change the categorical variable to gender 
+
+* Edit the labels and title as needed
+
+* Change the palettes for color and fill
+
+* In the parentheses for `theme_minimal()` change the size to larger with `base_size = 16`
+
+* Run the code, make any corrections needed, and run it again :-)
+
+---
+
+## Figure 3 code 
+
+&lt;img src="./this-is-the-way.jpg" width="600" style="display: block; margin: auto;" /&gt;
+
+---
+
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+*starwarsRec
+```
+]
+ 
+.panel2-my_fig3-auto[
+
+```
+# A tibble: 87 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 77 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+* filter(mass &lt; 250)
+```
+]
+ 
+.panel2-my_fig3-auto[
+
+```
+# A tibble: 58 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 48 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+* drop_na(gender)
+```
+]
+ 
+.panel2-my_fig3-auto[
+
+```
+# A tibble: 57 x 11
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;      &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; 
+ 1 Luke S…    172    77 blond       fair       light           19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       bright         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… bright          33   none  mascu…
+ 4 Darth …    202   136 none        white      bright          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      dark            19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      light           52   male  mascu…
+ 7 Beru W…    165    75 brown       light      light           47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red bright          NA   none  mascu…
+ 9 Biggs …    183    84 black       light      dark            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       light           57   male  mascu…
+# … with 47 more rows, and 2 more variables: homeworld &lt;fct&gt;, species &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+* ggplot(aes(y = mass, x = gender, fill = gender, color = gender))
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+* geom_half_violin(side = "r")
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+* geom_half_point(alpha = .6, side = "l")
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+* labs(x = "Gender",
+*      y = "Mass (kg)",
+*      title = "Distribution of Mass by Gender for Star Wars\nCharacters")
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Gender",
+       y = "Mass (kg)",
+       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+* theme_minimal(base_size = 14)
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Gender",
+       y = "Mass (kg)",
+       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+* coord_flip()
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Gender",
+       y = "Mass (kg)",
+       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+* scale_color_brewer(palette = "Set1")
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Gender",
+       y = "Mass (kg)",
+       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Set1") +
+* scale_fill_brewer(palette = "Set1")
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Figure 3 code
+.panel1-my_fig3-auto[
+
+```r
+starwarsRec %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  drop_na(gender) %&gt;%
+  ggplot(aes(y = mass, x = gender, fill = gender, color = gender)) +
+  geom_half_violin(side = "r") +
+  geom_half_point(alpha = .6, side = "l") +
+  labs(x = "Gender",
+       y = "Mass (kg)",
+       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+  theme_minimal(base_size = 14) +
+  coord_flip() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1") +
+* theme(legend.position = 'none')
+```
+]
+ 
+.panel2-my_fig3-auto[
+![](graphs_files/figure-html/my_fig3_auto_12_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_fig3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_fig3-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_fig3-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Basic scatter plot
+.panel1-my_scatter-auto[
+
+```r
+*starwars
+```
+]
+ 
+.panel2-my_scatter-auto[
+
+```
+# A tibble: 87 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic scatter plot
+.panel1-my_scatter-auto[
+
+```r
+starwars %&gt;%
+* drop_na(height, mass)
+```
+]
+ 
+.panel2-my_scatter-auto[
+
+```
+# A tibble: 59 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 49 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic scatter plot
+.panel1-my_scatter-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+* ggplot(aes(x = height, y = mass))
+```
+]
+ 
+.panel2-my_scatter-auto[
+![](graphs_files/figure-html/my_scatter_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic scatter plot
+.panel1-my_scatter-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  ggplot(aes(x = height, y = mass)) +
+* geom_point()
+```
+]
+ 
+.panel2-my_scatter-auto[
+![](graphs_files/figure-html/my_scatter_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_scatter-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_scatter-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_scatter-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+*starwars
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+
+```
+# A tibble: 87 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+* drop_na(height, mass)
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+
+```
+# A tibble: 59 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 49 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+* ggplot(aes(x = height, y = mass))
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+![](graphs_files/figure-html/my_scatter_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  ggplot(aes(x = height, y = mass)) +
+* geom_point(color = "dodgerblue2")
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+![](graphs_files/figure-html/my_scatter_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  ggplot(aes(x = height, y = mass)) +
+  geom_point(color = "dodgerblue2") +
+* geom_smooth(method = "lm", se = FALSE,
+*             color = "orange")
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+![](graphs_files/figure-html/my_scatter_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  ggplot(aes(x = height, y = mass)) +
+  geom_point(color = "dodgerblue2") +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "orange") +
+* labs(x = "Height (cm)",
+*      y = "Mass (kg)",
+*      title = "Height and Mass of Star Wars Characters")
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+![](graphs_files/figure-html/my_scatter_fancy_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy scatter plot
+.panel1-my_scatter_fancy-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  ggplot(aes(x = height, y = mass)) +
+  geom_point(color = "dodgerblue2") +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "orange") +
+  labs(x = "Height (cm)",
+       y = "Mass (kg)",
+       title = "Height and Mass of Star Wars Characters") +
+* theme_bw(base_size = 14)
+```
+]
+ 
+.panel2-my_scatter_fancy-auto[
+![](graphs_files/figure-html/my_scatter_fancy_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_scatter_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_scatter_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_scatter_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+*starwars
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+
+```
+# A tibble: 87 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 77 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+* drop_na(height, mass)
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+
+```
+# A tibble: 59 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 49 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+* filter(mass &lt; 250)
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+
+```
+# A tibble: 58 x 14
+   name    height  mass hair_color  skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond       fair       blue            19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;        gold       yellow         112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;        white, bl… red             33   none  mascu…
+ 4 Darth …    202   136 none        white      yellow          41.9 male  mascu…
+ 5 Leia O…    150    49 brown       light      brown           19   fema… femin…
+ 6 Owen L…    178   120 brown, grey light      blue            52   male  mascu…
+ 7 Beru W…    165    75 brown       light      blue            47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;        white, red red             NA   none  mascu…
+ 9 Biggs …    183    84 black       light      brown           24   male  mascu…
+10 Obi-Wa…    182    77 auburn, wh… fair       blue-gray       57   male  mascu…
+# … with 48 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+```
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+* ggplot(aes(x = height, y = mass, label = name))
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(x = height, y = mass, label = name)) +
+* geom_point(color = "dodgerblue2", shape = 18,
+*            size = 4, alpha = .6)
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(x = height, y = mass, label = name)) +
+  geom_point(color = "dodgerblue2", shape = 18,
+             size = 4, alpha = .6) +
+* geom_smooth(method = "lm", se = FALSE,
+*             color = "orange", linetype = "dotdash")
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(x = height, y = mass, label = name)) +
+  geom_point(color = "dodgerblue2", shape = 18,
+             size = 4, alpha = .6) +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "orange", linetype = "dotdash") +
+* labs(x = "Height (cm)",
+*      y = "Mass (kg)",
+*      title = "Height and Mass of Star Wars Characters\n(Excludes Jabba)")
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(x = height, y = mass, label = name)) +
+  geom_point(color = "dodgerblue2", shape = 18,
+             size = 4, alpha = .6) +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "orange", linetype = "dotdash") +
+  labs(x = "Height (cm)",
+       y = "Mass (kg)",
+       title = "Height and Mass of Star Wars Characters\n(Excludes Jabba)") +
+* theme_bw(base_size = 14)
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Even fancier scatter plot (without Jabba)
+.panel1-my_scatter_fancier-auto[
+
+```r
+starwars %&gt;%
+  drop_na(height, mass) %&gt;%
+  filter(mass &lt; 250) %&gt;%
+  ggplot(aes(x = height, y = mass, label = name)) +
+  geom_point(color = "dodgerblue2", shape = 18,
+             size = 4, alpha = .6) +
+  geom_smooth(method = "lm", se = FALSE,
+              color = "orange", linetype = "dotdash") +
+  labs(x = "Height (cm)",
+       y = "Mass (kg)",
+       title = "Height and Mass of Star Wars Characters\n(Excludes Jabba)") +
+  theme_bw(base_size = 14)
+```
+]
+ 
+.panel2-my_scatter_fancier-auto[
+![](graphs_files/figure-html/my_scatter_fancier_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_scatter_fancier-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_scatter_fancier-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_scatter_fancier-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## Questions?
+
+&lt;img src="i-have-spoken.jpg" width="400" style="display: block; margin: auto;" /&gt;
+
+---
+
+## The end
+
+* Email me at [harrisj@wustl.edu](mailto:harrisj@wustl.edu)
+
+* Connect with me on Twitter [@jenineharris](https://twitter.com/jenineharris)
+
+&lt;br&gt;&lt;br&gt;
+
+&lt;img src="ChapinHall_Logo_UChicago_RGB.png" width="800" style="display: block; margin: auto;" /&gt;
+
+
+&lt;!-- adjust font size in this css code chunk, currently 80 --&gt;
+
+&lt;style type="text/css"&gt;
+.remark-code{line-height: 1.5; font-size: 80%}
+
+@media print {
+  .has-continuation {
+    display: block;
+  }
+}
+
+code.r.hljs.remark-code{
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+code.r.hljs.remark-code:hover{
+  overflow-x:visible;
+  width: 500px;
+  border-style: solid;
+}
+&lt;/style&gt;
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
