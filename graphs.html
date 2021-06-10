@@ -2844,7 +2844,7 @@ starwarsRec %&gt;%
   geom_histogram(color = 'white', fill = '#c994c7') +
 * labs(x = 'Character height (cm)',
 *      y = 'Frequency',
-*      title = 'Distribution of Star Wars Character Height by Species')
+*      title = 'Distribution of Star Wars Character Height\nby Species')
 ```
 ]
  
@@ -2865,7 +2865,7 @@ starwarsRec %&gt;%
   geom_histogram(color = 'white', fill = '#c994c7') +
   labs(x = 'Character height (cm)',
        y = 'Frequency',
-       title = 'Distribution of Star Wars Character Height by Species') +
+       title = 'Distribution of Star Wars Character Height\nby Species') +
 * theme_minimal(base_size = 14)
 ```
 ]
@@ -2887,7 +2887,7 @@ starwarsRec %&gt;%
   geom_histogram(color = 'white', fill = '#c994c7') +
   labs(x = 'Character height (cm)',
        y = 'Frequency',
-       title = 'Distribution of Star Wars Character Height by Species') +
+       title = 'Distribution of Star Wars Character Height\nby Species') +
   theme_minimal(base_size = 14) +
 * facet_grid(facets = vars(species))
 ```
@@ -4363,7 +4363,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
 * labs(x = "Gender",
 *      y = "Mass (kg)",
-*      title = "Distribution of Mass by Gender for Star Wars\nCharacters")
+*      title = "Distribution of Mass by Gender for\nStar Wars Characters")
 ```
 ]
  
@@ -4386,7 +4386,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Gender",
        y = "Mass (kg)",
-       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+       title = "Distribution of Mass by Gender for\nStar Wars Characters") +
 * theme_minimal(base_size = 16)
 ```
 ]
@@ -4410,7 +4410,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Gender",
        y = "Mass (kg)",
-       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+       title = "Distribution of Mass by Gender for\nStar Wars Characters") +
   theme_minimal(base_size = 16) +
 * coord_flip()
 ```
@@ -4435,7 +4435,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Gender",
        y = "Mass (kg)",
-       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+       title = "Distribution of Mass by Gender for\nStar Wars Characters") +
   theme_minimal(base_size = 16) +
   coord_flip() +
 * scale_color_brewer(palette = "Set1")
@@ -4461,7 +4461,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Gender",
        y = "Mass (kg)",
-       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+       title = "Distribution of Mass by Gender for\nStar Wars Characters") +
   theme_minimal(base_size = 16) +
   coord_flip() +
   scale_color_brewer(palette = "Set1") +
@@ -4488,7 +4488,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Gender",
        y = "Mass (kg)",
-       title = "Distribution of Mass by Gender for Star Wars\nCharacters") +
+       title = "Distribution of Mass by Gender for\nStar Wars Characters") +
   theme_minimal(base_size = 16) +
   coord_flip() +
   scale_color_brewer(palette = "Set1") +
