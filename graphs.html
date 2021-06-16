@@ -446,15 +446,18 @@ starwarsRec %&gt;%
 
 Make a bar chart of the Species of Star Wars Characters in your R Markdown file (chunk6).
 
-Edit the code to: 
+Edit the chunk6 code to: 
 
-* Change the color of the bars by replacing #7463AC the name of your favorite color (e.g., orange) or using a color found on the &lt;a href = "https://colorbrewer2.org/"&gt;https://colorbrewer2.org/&lt;/a&gt; website
+* Change the gender variable to the species variable
+
+* Change the color of the bars by replacing #7463AC the name of your favorite color (e.g., orange) or using a color found on the https://colorbrewer2.org/ website
 
 * Add labels for the axes and a title inside the quote marks
 
-* try another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+* Try another theme, you can find them in the help documents by searching "complete themes" or here: https://ggplot2.tidyverse.org/reference/ggtheme.html
 
 When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
 
 ---
 
@@ -2043,11 +2046,15 @@ starwarsRec %&gt;%
 
 Create a bar chart of the Gender and Eye Color of Star Wars Characters in chunk 13 in your R Markdown file.
 
-Copy and paste code from the version you like best and edit the code to: 
+Copy and paste code from the stacked or grouped graph you like best and edit the code to: 
 
 * Add the eye color variable in the appropriate places
 
-* If the graph uses color, change the color of the bars by replacing the palette with a different palette found on the http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ website (bottom of page)
+* If the graph uses color, change the color of the bars by replacing the palette with a different palette; 
+
+    + names of palettes are in the help documentation (search scale_fill_brewer)
+    
+    + colors found on the http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ website
 
 * Add labels for the axes and a title inside the quote marks
 
@@ -3066,7 +3073,7 @@ starwarsRec %&gt;%
 
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
@@ -3097,7 +3104,7 @@ count: false
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
@@ -3129,7 +3136,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
@@ -3146,15 +3153,15 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-* geom_violin(aes(color = species), fill = "white",
-*             alpha = .8)
+* geom_boxplot(aes(color = species, fill = species),
+*              alpha = .4)
 ```
 ]
  
@@ -3165,17 +3172,16 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
-* geom_boxplot(aes(color = species, fill = species),
-*              alpha = .4)
+  geom_boxplot(aes(color = species, fill = species),
+               alpha = .4) +
+* geom_jitter(aes(color = species), alpha = .6)
 ```
 ]
  
@@ -3186,37 +3192,13 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
-  geom_boxplot(aes(color = species, fill = species),
-               alpha = .4) +
-* geom_jitter(aes(color = species), alpha = .6)
-```
-]
- 
-.panel2-my_box_fancy-auto[
-![](graphs_files/figure-html/my_box_fancy_auto_06_output-1.png)&lt;!-- --&gt;
-]
-
----
-count: false
- 
-## Super fancy layered box plot
-.panel1-my_box_fancy-auto[
-
-```r
-starwarsRec %&gt;%
-  drop_na(height, species) %&gt;%
-  ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
                alpha = .4) +
   geom_jitter(aes(color = species), alpha = .6) +
@@ -3227,21 +3209,19 @@ starwarsRec %&gt;%
 ]
  
 .panel2-my_box_fancy-auto[
-![](graphs_files/figure-html/my_box_fancy_auto_07_output-1.png)&lt;!-- --&gt;
+![](graphs_files/figure-html/my_box_fancy_auto_06_output-1.png)&lt;!-- --&gt;
 ]
 
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
                alpha = .4) +
   geom_jitter(aes(color = species), alpha = .6) +
@@ -3253,21 +3233,19 @@ starwarsRec %&gt;%
 ]
  
 .panel2-my_box_fancy-auto[
-![](graphs_files/figure-html/my_box_fancy_auto_08_output-1.png)&lt;!-- --&gt;
+![](graphs_files/figure-html/my_box_fancy_auto_07_output-1.png)&lt;!-- --&gt;
 ]
 
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
                alpha = .4) +
   geom_jitter(aes(color = species), alpha = .6) +
@@ -3280,21 +3258,19 @@ starwarsRec %&gt;%
 ]
  
 .panel2-my_box_fancy-auto[
-![](graphs_files/figure-html/my_box_fancy_auto_09_output-1.png)&lt;!-- --&gt;
+![](graphs_files/figure-html/my_box_fancy_auto_08_output-1.png)&lt;!-- --&gt;
 ]
 
 ---
 count: false
  
-## Super fancy layered box plot
+## Fancy layered box plot
 .panel1-my_box_fancy-auto[
 
 ```r
 starwarsRec %&gt;%
   drop_na(height, species) %&gt;%
   ggplot(aes(x = species, y = height)) +
-  geom_violin(aes(color = species), fill = "white",
-              alpha = .8) +
   geom_boxplot(aes(color = species, fill = species),
                alpha = .4) +
   geom_jitter(aes(color = species), alpha = .6) +
@@ -3308,7 +3284,7 @@ starwarsRec %&gt;%
 ]
  
 .panel2-my_box_fancy-auto[
-![](graphs_files/figure-html/my_box_fancy_auto_10_output-1.png)&lt;!-- --&gt;
+![](graphs_files/figure-html/my_box_fancy_auto_09_output-1.png)&lt;!-- --&gt;
 ]
 
 &lt;style&gt;
@@ -3719,7 +3695,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
 * labs(x = "Species",
 *      y = "Mass (kg)",
-*      title = "Distribution of Species Height for Star Wars\nCharacters")
+*      title = "Distribution of Species Height for Star Wars Characters")
 ```
 ]
  
@@ -3740,7 +3716,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters") +
 * theme_minimal(base_size = 14)
 ```
 ]
@@ -3762,7 +3738,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters") +
   theme_minimal(base_size = 14) +
 * coord_flip()
 ```
@@ -3785,7 +3761,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters") +
   theme_minimal(base_size = 14) +
   coord_flip() +
 * scale_color_brewer(palette = "Dark2")
@@ -3809,7 +3785,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters") +
   theme_minimal(base_size = 14) +
   coord_flip() +
   scale_color_brewer(palette = "Dark2") +
@@ -3834,7 +3810,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters") +
   theme_minimal(base_size = 14) +
   coord_flip() +
   scale_color_brewer(palette = "Dark2") +
@@ -3882,7 +3858,7 @@ starwarsRec %&gt;%
 
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -3913,7 +3889,7 @@ count: false
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -3945,7 +3921,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -3962,7 +3938,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -3980,7 +3956,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -3999,7 +3975,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4010,7 +3986,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
 * labs(x = "Species",
 *      y = "Mass (kg)",
-*      title = "Distribution of Species Height for Star Wars\nCharacters")
+*      title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)")
 ```
 ]
  
@@ -4021,7 +3997,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4032,7 +4008,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)") +
 * theme_minimal(base_size = 14)
 ```
 ]
@@ -4044,7 +4020,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4055,7 +4031,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)") +
   theme_minimal(base_size = 14) +
 * coord_flip()
 ```
@@ -4068,7 +4044,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4079,7 +4055,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)") +
   theme_minimal(base_size = 14) +
   coord_flip() +
 * scale_color_brewer(palette = "Dark2")
@@ -4093,7 +4069,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4104,7 +4080,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)") +
   theme_minimal(base_size = 14) +
   coord_flip() +
   scale_color_brewer(palette = "Dark2") +
@@ -4119,7 +4095,7 @@ starwarsRec %&gt;%
 ---
 count: false
  
-## Rain cloud plot
+## Rain cloud plot without Jabba
 .panel1-my_rain_cloud3-auto[
 
 ```r
@@ -4130,7 +4106,7 @@ starwarsRec %&gt;%
   geom_half_point(alpha = .6, side = "l") +
   labs(x = "Species",
        y = "Mass (kg)",
-       title = "Distribution of Species Height for Star Wars\nCharacters") +
+       title = "Distribution of Species Height for Star Wars Characters \n(Excluding Jabba the Hutt)") +
   theme_minimal(base_size = 14) +
   coord_flip() +
   scale_color_brewer(palette = "Dark2") +
@@ -4178,7 +4154,7 @@ starwarsRec %&gt;%
 
 ## You Try It!
 
-* Copy the rain cloud plot code for height or mass and change the categorical variable to gender 
+* Copy code from one of the the rain cloud plots into chunk23 and change the categorical variable to gender 
 
 * Edit the labels and title as needed
 
@@ -4187,6 +4163,10 @@ starwarsRec %&gt;%
 * In the parentheses for `theme_minimal()` change the size to larger with `base_size = 16`
 
 * Run the code, make any corrections needed, and run it again :-)
+
+
+
+
 
 ---
 
